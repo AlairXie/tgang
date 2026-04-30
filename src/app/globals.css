@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 健康积极的暖绿配色 + 中文衬线显示字体 */
+:root {
+  --font-display: 'Cormorant Garamond', 'Noto Serif SC', 'Songti SC', serif;
+  --font-sans: 'Inter', 'PingFang SC', 'Hiragino Sans GB', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --bg: #f6f7f4;
+  --ink: #161b13;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-image:
+    radial-gradient(circle at 0% 0%, rgba(82, 155, 76, 0.12), transparent 38%),
+    radial-gradient(circle at 100% 0%, rgba(214, 174, 107, 0.18), transparent 42%),
+    radial-gradient(circle at 50% 120%, rgba(63, 127, 51, 0.14), transparent 50%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+@layer components {
+  .display {
+    font-family: var(--font-display);
+    font-feature-settings: 'liga', 'dlig', 'kern';
+    letter-spacing: -0.01em;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-ink-900/10 bg-white/70 px-3 py-1 text-xs uppercase tracking-[0.18em] text-ink-700 backdrop-blur;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-ink-900 px-6 py-3 text-sm font-medium text-ink-50 transition hover:bg-moss-700 active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-ink-900/15 bg-white/60 px-5 py-2.5 text-sm font-medium text-ink-800 backdrop-blur transition hover:bg-white;
+  }
+  .card {
+    @apply rounded-3xl border border-ink-900/10 bg-white/70 shadow-soft backdrop-blur;
+  }
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: theme('backgroundImage.grain');
+    mix-blend-mode: multiply;
+    opacity: 0.5;
+    border-radius: inherit;
+  }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(38, 46, 33, 0.18);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(38, 46, 33, 0.32);
+}
+
+/* 不希望摄像头预览镜像反向（视觉上更直观） */
+.mirror {
+  transform: scaleX(-1);
+}
