@@ -103,7 +103,7 @@ export default function TrainPage({
                 <strong className="display text-base">隐私保护：</strong>
                 <br />
                 摄像头检测全部在浏览器本地完成，画面不会上传。仅当连续姿势异常时，
-                才会把"姿态指标数字"（不含图像）发给 DeepSeek
+                才会把"姿态指标数字"（不含图像）发给 AI 模型
                 获取个性化建议。
               </div>
             </aside>

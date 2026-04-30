@@ -11,7 +11,7 @@ import { speak } from '@/lib/speech';
  *  - 通过 CDN 加载 wasm 与模型
  *  - 仅在客户端运行（动态 import 避免 SSR）
  *  - 每帧调用 analyzePose 得到分数
- *  - 当持续不达标，触发 onCoachAdvice 回调（父组件可调用 DeepSeek API）
+ *  - 当持续不达标，触发 onCoachAdvice 回调（父组件可调用 LLM API）
  *  - 摄像头画面与 landmarks 全程在浏览器本地，不上传图像
  */
 
@@ -72,6 +72,12 @@ export function PoseCorrector({ enabled, onSnapshot, onCoachAdvice }: Props) {
           return;
         }
         landmarkerRef.current = landmarker;
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error(
+            '浏览器不支持摄像头访问。请确保通过 HTTPS 或 localhost 打开本页面（手机访问需要 HTTPS）。',
+          );
+        }
 
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 640, height: 480, facingMode: 'user' },

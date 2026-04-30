@@ -179,7 +179,7 @@ function Footer() {
       <div className="border-t border-ink-900/10 pt-6">
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
-            提肛助手 · 由 Next.js + MediaPipe Pose + DeepSeek V4 驱动
+            提肛助手 · 由 Next.js + MediaPipe Pose + MiniMax M2.7 驱动
           </div>
           <div className="text-[11px]">
             本应用不替代医疗建议。如有盆腔疼痛或其他健康问题，请咨询医生。

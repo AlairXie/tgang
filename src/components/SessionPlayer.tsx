@@ -353,7 +353,7 @@ export function SessionPlayer({
                 {coachAdvice}
               </div>
               <div className="mt-2 text-[11px] text-ink-500">
-                由 DeepSeek V4 个性化生成 · 已语音播报
+                由 AI 教练个性化生成 · 已语音播报
               </div>
             </motion.div>
           )}

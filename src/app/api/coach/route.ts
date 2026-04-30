@@ -2,25 +2,61 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
 /**
- * DeepSeek V4 个性化教练接口（OpenAI SDK 兼容）。
+ * 个性化教练接口（OpenAI SDK 兼容）。
+ * 支持 DeepSeek 与 MiniMax 双模型，通过环境变量 LLM_PROVIDER 切换。
  *
  * 接收：
  *   {
  *     kind: 'posture' | 'plan' | 'reflection',
- *     payload: { ... }   // 例如 PostureSnapshot 或训练记录数组
+ *     payload: { ... },
+ *     provider?: 'deepseek' | 'minimax'  // 可选，覆盖默认提供者
  *   }
  *
  * 返回：
- *   { advice: string }    // 1-2 句中文建议（适合语音播报）
+ *   { advice: string, provider: string }
  *
  * 注意：摄像头图像永远不会发送，仅发送已抽象的姿态指标。
  */
 
 export const runtime = 'nodejs';
 
+type LLMProvider = 'deepseek' | 'minimax';
+
 interface CoachRequest {
   kind: 'posture' | 'plan' | 'reflection';
   payload: unknown;
+  provider?: LLMProvider;
+}
+
+function resolveProvider(requested?: LLMProvider): LLMProvider {
+  if (requested) return requested;
+  const env = process.env.LLM_PROVIDER?.toLowerCase();
+  if (env === 'minimax' || env === 'deepseek') return env;
+  return 'minimax';
+}
+
+function getClient(provider: LLMProvider): { client: OpenAI; model: string } | null {
+  if (provider === 'minimax') {
+    const apiKey = process.env.MINIMAX_API_KEY;
+    if (!apiKey) return null;
+    return {
+      client: new OpenAI({
+        apiKey,
+        baseURL: process.env.MINIMAX_BASE_URL ?? 'https://api.minimaxi.com/v1',
+      }),
+      model: process.env.MINIMAX_MODEL ?? 'MiniMax-M2.7',
+    };
+  }
+  // deepseek
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  if (!apiKey) return null;
+  return {
+    client: new OpenAI({
+      apiKey,
+      baseURL: process.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com',
+    }),
+    model: process.env.DEEPSEEK_MODEL ?? 'deepseek-v4-flash',
+  };
 }
 
 const SYSTEM_PROMPT = `你是一位严谨且温暖的盆底肌训练教练（提肛 / 凯格尔运动），名字叫"提肛助手"。
@@ -84,24 +120,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'missing kind' }, { status: 400 });
   }
 
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  if (!apiKey) {
-    // 没配置 key 时降级返回本地预设建议，保证页面可用
+  const provider = resolveProvider(body.provider);
+  const resolved = getClient(provider);
+
+  if (!resolved) {
     return NextResponse.json({
       advice: localFallback(body),
       fallback: true,
+      provider,
     });
   }
 
-  const client = new OpenAI({
-    apiKey,
-    baseURL: process.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com',
-  });
+  const { client, model } = resolved;
 
   try {
     const completion = await client.chat.completions.create({
-      model: process.env.DEEPSEEK_MODEL ?? 'deepseek-v4-flash',
-      temperature: 0.6,
+      model,
+      temperature: provider === 'minimax' ? 0.7 : 0.6,
       max_tokens: 160,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
@@ -110,12 +145,13 @@ export async function POST(req: NextRequest) {
     });
     const advice =
       completion.choices?.[0]?.message?.content?.trim() ?? localFallback(body);
-    return NextResponse.json({ advice });
+    return NextResponse.json({ advice, provider });
   } catch (e) {
     return NextResponse.json({
       advice: localFallback(body),
       fallback: true,
-      error: e instanceof Error ? e.message : 'deepseek error',
+      provider,
+      error: e instanceof Error ? e.message : `${provider} error`,
     });
   }
 }
